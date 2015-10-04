@@ -4,8 +4,7 @@ var request = require('request');
 var bodyParser = require('body-parser');
 var twilio = require('twilio');
 
-var db = {
-}; 
+var db = {}; 
 
 app.use(bodyParser.urlencoded({
 	extended: false
@@ -56,4 +55,5 @@ app.post('/', function(req, res) {
 });
 
 
-app.listen(3000);	
+app.listen(3000);
+console.log("Listening on port 3000");
