@@ -105,6 +105,127 @@ var firstMessage = function(From, req, res) {
 	addToDatabase(req.body.From, a);
 }
 
+// an array of the days of the week
+var days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'
+			'Saturday', 'Sunday'];
+
+// account for users pluralizing days of the week
+var pluralDaysOfWeek = function(dayNumber, index, input) {
+	if (input.charAt(index + days[dayNumber]) === 's') 
+		return index + days[dayNumber].length + 1;
+};
+
+// move past all white space
+var skipWhiteSpace = function(input, index) {
+	while (input.charAt(index) !== ' ' && input.charAt(index) !== '\t') &&
+		input.charAt(index) !== '\n') index ++;
+	return index;
+};
+
+// parse the input given by the user and return an array of the command
+var parseInput = function(input) {
+	var result = [0, 0, 0, 0, 0];
+	var index = 0;
+
+	input = input.toLowerCase();
+
+	// determine the action the user wants
+	if (input.substring(0, 3) === "add") {
+		index = 3;
+		result[0] = "add";
+	}
+	else if (input.substring(0, 6) === "remove") {
+		index = 6;
+		result[0] = "remove";
+	}
+	else if (input.substring(0, 6) === "change") {
+		index = 6;
+		result[0] = "change";
+	}
+	else {
+		var errorTwiml = new twilio.TwimlResponse();
+		errorTwiml.message("Try that again. Remember to use \"add,\"" + 
+			"\"remove,\" or \"change,\"");
+		res.send(errorTwiml.toString());
+		return;
+	}
+
+	index = skipWhiteSpace(input, index, 1);
+
+	switch (input.substring(index, index + 2)) {
+
+		case ("mo") :
+			result[1] = "Monday";
+			index = pluralDaysOfWeek(1, index, input);
+			break;
+		case ("tu") :
+			result[1] = "Tuesday";
+			index = pluralDaysOfWeek(2, index, input);
+			break;
+		case ("we") :
+			result[1] = "Wednesday";
+			index = pluralDaysOfWeek(3, index, input);
+			break;
+		case ("th") :
+			result[1] = "Thursday";
+			index = pluralDaysOfWeek(4, index, input);
+			break;
+		case ("fr") :
+			result[1] = "Friday";
+			index = pluralDaysOfWeek(5, index, input);
+			break;
+		case ("sa") :
+			result[1] = "Saturday";
+			index = pluralDaysOfWeek(6, index, input);
+			break;
+		case ("su") :
+			result[1] = "Sunday";
+			index = pluralDaysOfWeek(7, index, input);
+			break;
+		case ("we") :
+			if (input.substring(index, index + 8) === "weekends") {
+				result[1] = "Weekends";
+			}
+			else if (input.substring(index, index + 8) === "weekdays") {
+				result[1] = "Weekdays";
+			}
+			index += 8;
+			break;
+		case ("ev") :
+			result[1] = "Everyday");
+			if (input.substring(index, index + 8) === "everyday") index += 8;
+			else index += 9;
+		default: break;
+	}
+
+	var string = input.substring(index, index + 5);
+
+	if (string.charAt(3) === ":") {
+		result[2] = string;
+		index += 5;
+	}
+	else if (string.charAt(2) === ":") {
+		result[2] = "0" + string;
+		index += 4;
+	}
+	else if ((string.charAt(0) === "1") && (string.charAt(1) === '0' || 
+		string.charAt(1) === '1' || string.charAt(1) === '2')) {
+		result[2] = string.substring(0, 2) + ":00";
+		index += 2;
+	}
+	else {
+		result[2] = "0" + string.charAt(1) + ":00";
+		index++;
+	}
+
+	if (input.charAt(input.length - 2) === "a") result[4] = "am";
+	else result[4] = "pm";
+
+	result[3] = input.substring(index, input.length - 2).trim();
+
+	return result;
+};
+
 // handle message sent from the user to Pill Buddy
 app.post('/', function(req, res) {
 
@@ -124,11 +245,30 @@ app.post('/', function(req, res) {
 	// ask the user for their name, store it, and ask them for reminders
 	else if (!db[num].getName()) {
 		db[num].setName(req.body.Body);
-		twiml.message("Hi there " + db[num].getName() + "! When would you like me to send you reminders?");
+		twiml.message("Hi there " + db[num].getName() + "! With Pill Buddy, " +
+			"staying on top of your pill regimen is easy! To modify your " + 
+			"pill schedule, write \"add,\" \"remove,\" or \"change,\" " + 
+			"followed by a day of the week, a time of the day, the name of " +
+			"the medication and \"am\" or \"pm.\" You can also set schedules" +
+			" for \"weekdays\", \"weekends,\", or \"every day.\" For " + 
+			"example, to add a reminder for Mondays at 9:00 am, write " +
+			"\"Monday 9:00 AM.\" When would you like me to remind you?");
 		res.send(twiml.toString());
 	}
 
 	// handle additions, removals, and changes of prescriptions
+<<<<<<< HEAD
+	else {
+		var command = parseInput(reg.body.Body);
+
+		var action     = command[0];
+		var day        = command[1];
+		var time       = command[2];
+		var medication = command[3];
+		var ampm       = command[4];
+
+		var response = "Remind me on " + day + "s at " + time;
+=======
 	else {	
 		var command = parseInput(reg.body.Body);
 		var action     = command[0];
@@ -138,6 +278,7 @@ app.post('/', function(req, res) {
 		var ampm       = command[4];
 
 		var response = "I'll remind you on " + day + "s at " + time;
+>>>>>>> ericawu/master
 		twiml.message(response);
 		
 		var cronJobDates; 
