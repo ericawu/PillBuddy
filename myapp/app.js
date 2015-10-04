@@ -36,7 +36,7 @@ app.post('/', function(req, res) {
 	console.log('i am hitting this')
 	if (name) {
 		twiml.message("Hi there " + req.body.Body + "!");
-		db[number].name = req.body.Body;
+		db[req.body.From].name = req.body.Body;
 		name = false;
 		console.log("TESTINGTESTINGTESTING" + db);
 		res.send(twiml.toString());
