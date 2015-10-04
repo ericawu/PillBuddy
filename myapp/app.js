@@ -11,11 +11,13 @@ var app = express();
 var request = require('request');
 var bodyParser = require('body-parser');
 var twilio = require('twilio');
+var CronJob = require('cron').CronJob;
 
 // A database which stores users' phone number and prescription information.
 var db = {}; 
 
 app.use(bodyParser.urlencoded({ extended: false }));
+
 
 // The Prescriptions class is used in conjunction with the Person class. It
 // manages what days and times users have prescriptions.
@@ -79,10 +81,12 @@ Person.prototype.getName = function() {
 	return this.firstName;
 };
 
+
 // set the Person's name to newName
 Person.prototype.setName = function(newName) {
 	this.firstName = newName;
 };
+
 
 // add a phoneNumber: Person pair to the database
 var addToDatabase = function(phoneNumber, Person) {
@@ -95,6 +99,7 @@ var firstMessage = function(From, req, res) {
 	welcomeTwiml.message("Hi! Welcome to Pill Buddy, your favorite pill" +
 	"reminder system. What's your name?");
 	res.send(welcomeTwiml.toString());
+
 
 	var a = new Person("", "");
 	addToDatabase(req.body.From, a);
@@ -252,6 +257,7 @@ app.post('/', function(req, res) {
 	}
 
 	// handle additions, removals, and changes of prescriptions
+<<<<<<< HEAD
 	else {
 		var command = parseInput(reg.body.Body);
 
@@ -262,10 +268,64 @@ app.post('/', function(req, res) {
 		var ampm       = command[4];
 
 		var response = "Remind me on " + day + "s at " + time;
+=======
+	else {	
+		var command = parseInput(reg.body.Body);
+		var action     = command[0];
+		var day        = command[1];
+		var time       = command[2];
+		var medication = command[3];
+		var ampm       = command[4];
+
+		var response = "I'll remind you on " + day + "s at " + time;
+>>>>>>> ericawu/master
 		twiml.message(response);
-		res.send(twiml.toString());
+		
+		var cronJobDates; 
+		var cronJobDay;
+		switch(day) {
+			case Monday: 
+				cronJobDay = 01;
+				break;
+			case Tuesday:
+				cronJobDay = 02;
+				break;
+			case Wednesday:
+				cronJobDay = 03;
+				break;
+			case Thursday: 
+				cronJobDay = 04;
+				break;
+			case Friday:
+				cronJobDay = 05;
+				break;
+			case Saturday:
+				cronJobDay = 06;
+				break;
+			case Sunday:
+				cronJobDay = 00;
+				break;
+			case Weekdays:
+				cronJobDay = 1-5;
+				break;
+		}
+
+		createCronJob('00 19 06 * * *');
+
+
+		return res.send(twiml.toString());
 	}
 	
 });
+var createCronJob = function(time) {
+new CronJob(time, function() {
+  			console.log('The CronJob is running');
+  			var textTwiml = new twilio.TwimlResponse();
+  			textTwiml.message("IT'S WORKING!");
+  			request.send(textTwiml.toString());
+  		}, null, true, 'America/New_York');
+}
+
+
 
 app.listen(3000);
