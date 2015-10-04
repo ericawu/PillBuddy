@@ -108,13 +108,11 @@ var firstMessage = function(From, req, res) {
 // handle message sent from the user to Pill Buddy
 app.post('/', function(req, res) {
 
-
 	// print the message data to console
 	console.log(req.body);
 
 	// initialize a twilio object to be sent as a message back to the user
 	var twiml = new twilio.TwimlResponse();
-
 
 	var num = req.body.From;
 
@@ -132,16 +130,61 @@ app.post('/', function(req, res) {
 
 	// handle additions, removals, and changes of prescriptions
 	else {	
-		var splitText = req.body.Body.split(' ');
-		var day = splitText[0];
-		var time = splitText[1];
-		
+		var command = parseInput(reg.body.Body);
+		var action     = command[0];
+		var day        = command[1];
+		var time       = command[2];
+		var medication = command[3];
+		var ampm       = command[4];
+
 		var response = "I'll remind you on " + day + "s at " + time;
 		twiml.message(response);
-		res.send(twiml.toString());
+		
+		var cronJobDates; 
+		var cronJobDay;
+		switch(day) {
+			case Monday: 
+				cronJobDay = 01;
+				break;
+			case Tuesday:
+				cronJobDay = 02;
+				break;
+			case Wednesday:
+				cronJobDay = 03;
+				break;
+			case Thursday: 
+				cronJobDay = 04;
+				break;
+			case Friday:
+				cronJobDay = 05;
+				break;
+			case Saturday:
+				cronJobDay = 06;
+				break;
+			case Sunday:
+				cronJobDay = 00;
+				break;
+			case Weekdays:
+				cronJobDay = 1-5;
+				break;
+		}
+
+		createCronJob('00 19 06 * * *');
+
+
+		return res.send(twiml.toString());
 	}
 	
 });
+var createCronJob = function(time) {
+new CronJob(time, function() {
+  			console.log('The CronJob is running');
+  			var textTwiml = new twilio.TwimlResponse();
+  			textTwiml.message("IT'S WORKING!");
+  			request.send(textTwiml.toString());
+  		}, null, true, 'America/New_York');
+}
+
 
 
 app.listen(3000);
