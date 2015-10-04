@@ -10,18 +10,69 @@ app.use(bodyParser.urlencoded({
 	extended: false
 }));
 
-var firstMessage = function(number, req, res) {
-	// console.log(req.body);
-	var twiml = new twilio.TwimlResponse();
-	var welcome = "Welcome to Pill Buddy! What's your name?";
-	twiml.message(welcome);
-	//name = true;
-	db[number] = {};
-	res.send(twiml.toString());
-	
-	//call function that listens
+function Precriptions() {	
+	this.prescriptions = {
+		Monday: [],
+		Tuesday: [],
+		Wednesday: [],
+		Thursday: [],
+		Friday: [],
+		Saturday: [],
+		Sunday: []
+	};
 };
 
+Prescriptions.prototype.add = function(day, hour, medication) {
+	var lowerDay = day.toLowerCase();
+	if (lowerDay === "weekdays") this.addWeekdays(hour, medication);
+	else if (lowerDay === "weekends") this.addWeekends(hour, medication);
+	else if (lowerDay === "everyday" || lowerDay === "every day") this.addEveryDay(hour, medication);
+	else this.addDay(day, hour, medication);
+};
+
+Prescriptions.prototype.addDay = function(day, hour, medication) {
+	this.prescriptions[day].push({
+		time: hour,
+		medication: medication
+	});
+};
+
+
+Prescriptions.prototype.addWeekdays = function(hour, medication) {
+	this.addDay("Monday", hour, medication);
+};
+
+Prescriptions.prototype.addEveryDay = function(hour, medication) {
+	for (var day in this.prescriptions) {
+		this.addDay(day, hour, medication);
+	};
+};
+
+Prescriptions.prototype.addWeekends = function(hour, medication) {
+	this.addDay("Saturday", hour, medication);
+};
+
+
+function Person(firstName) {
+	this.firstName = firstName;
+};
+
+Person.prototype.getName = function() {
+	return this.firstName;
+};
+
+var addToDatabase = function(phoneNumber, Person) {
+	db[phoneNumber] = Person;
+};
+
+var firstMessage = function(From, req, res) {
+    var welcomeTwiml = new twilio.TwimlResponse();
+	welcomeTwiml.message("Hi! Welcome to Pill Buddy, your favorite pill" +
+	"reminder system. What's your name?");
+	res.send(welcomeTwiml.toString());
+
+	addPerson(req.body.From, "");
+}
 
 app.post('/', function(req, res) {
 	var twiml = new twilio.TwimlResponse();
