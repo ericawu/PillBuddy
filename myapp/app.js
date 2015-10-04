@@ -3,6 +3,7 @@ var app = express();
 var request = require('request');
 var bodyParser = require('body-parser');
 var twilio = require('twilio');
+var CronJob = require('cron').CronJob;
 
 var db = {}; 
 
@@ -69,17 +70,6 @@ var addToDatabase = function(phoneNumber, Person) {
 	db[phoneNumber] = Person;
 };
 
-// var firstMessage = function(number, req, res) {
-// 	// console.log(req.body);
-// 	var twiml = new twilio.TwimlResponse();
-// 	var welcome = "Welcome to Pill Buddy! What's your name?";
-// 	twiml.message(welcome);
-// 	//name = true;
-// 	db[number] = {};
-// 	res.send(twiml.toString());
-	
-// 	//call function that listens
-// };
 var firstMessage = function(From, req, res) {
     var welcomeTwiml = new twilio.TwimlResponse();
 	welcomeTwiml.message("Hi! Welcome to Pill Buddy, your favorite pill" +
