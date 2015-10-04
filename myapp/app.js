@@ -10,15 +10,13 @@ app.use(bodyParser.urlencoded({
 	extended: false
 }));
 
-var name = false;
-
 var firstMessage = function(number, req, res) {
 	// console.log(req.body);
 	var twiml = new twilio.TwimlResponse();
 	var welcome = "Welcome to Pill Buddy! What's your name?";
 	twiml.message(welcome);
-	name = true;
-	db[number] = true;
+	//name = true;
+	db[number] = {};
 	res.send(twiml.toString());
 	
 	//call function that listens
@@ -29,15 +27,14 @@ app.post('/', function(req, res) {
 	var twiml = new twilio.TwimlResponse();
 
 	if (!db[req.body.From]) {
-		console.log('inside the blocl')
+		console.log('inside the block')
 		return firstMessage(req.body.From, req, res);
 	}
 	console.log('i am hitting this')
-	if (name) {
-		twiml.message("Hi there " + req.body.Body + "!");
+	if (!db[req.body.From].name) {
+		twiml.message("Hi there " + req.body.Body + "! When would you like me to send you reminders?");
 		db[req.body.From].name = req.body.Body;
-		name = false;
-		console.log("TESTINGTESTINGTESTING" + db);
+		console.log("TESTINGTESTINGTESTING", db);
 		res.send(twiml.toString());
 		
 		}
