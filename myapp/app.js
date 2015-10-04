@@ -10,7 +10,7 @@ app.use(bodyParser.urlencoded({
 	extended: false
 }));
 
-function Precriptions() {	
+function Prescriptions() {	
 	this.prescriptions = {
 		Monday: [],
 		Tuesday: [],
@@ -61,41 +61,56 @@ Person.prototype.getName = function() {
 	return this.firstName;
 };
 
+Person.prototype.setName = function(newName) {
+	this.firstName = newName;
+};
+
 var addToDatabase = function(phoneNumber, Person) {
 	db[phoneNumber] = Person;
 };
 
+// var firstMessage = function(number, req, res) {
+// 	// console.log(req.body);
+// 	var twiml = new twilio.TwimlResponse();
+// 	var welcome = "Welcome to Pill Buddy! What's your name?";
+// 	twiml.message(welcome);
+// 	//name = true;
+// 	db[number] = {};
+// 	res.send(twiml.toString());
+	
+// 	//call function that listens
+// };
 var firstMessage = function(From, req, res) {
     var welcomeTwiml = new twilio.TwimlResponse();
 	welcomeTwiml.message("Hi! Welcome to Pill Buddy, your favorite pill" +
 	"reminder system. What's your name?");
 	res.send(welcomeTwiml.toString());
-
-	addPerson(req.body.From, "");
+	var a = new Person("");
+	addToDatabase(req.body.From, a);
+	//addPerson(req.body.From, "");
 }
 
 app.post('/', function(req, res) {
+	console.log(req.body);
 	var twiml = new twilio.TwimlResponse();
+	var num = req.body.From;
 
-	if (!db[req.body.From]) {
-		console.log('inside the block')
-		return firstMessage(req.body.From, req, res);
+	if (!db[num]) {
+		return firstMessage(num, req, res);
 	}
-	console.log('i am hitting this')
-	if (!db[req.body.From].name) {
-		twiml.message("Hi there " + req.body.Body + "! When would you like me to send you reminders?");
-		db[req.body.From].name = req.body.Body;
-		console.log("TESTINGTESTINGTESTING", db);
-		res.send(twiml.toString());
+	else if (!db[num].getName()) {
+		db[num].setName(req.body.Body);
+		twiml.message("Hi there " + db[num].getName() + "! When would you like me to send you reminders?");
 		
+		res.send(twiml.toString());
 		}
+
 	else {
 	var splitText = req.body.Body.split(' ');
 	var day = splitText[0];
 	var time = splitText[1];
-	console.log(req.body);
 	
-	var response = "Remind me on " + day + "s at " + time;
+	var response = "Great I will remind you on " + day + "s at " + time;
 	twiml.message(response);
 	res.send(twiml.toString());
 	}
@@ -105,3 +120,4 @@ app.post('/', function(req, res) {
 
 app.listen(3000);
 console.log("Listening on port 3000");
+
