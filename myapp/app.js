@@ -12,6 +12,9 @@ var request = require('request');
 var bodyParser = require('body-parser');
 var twilio = require('twilio');
 var CronJob = require('cron').CronJob;
+var accountSid = 'AC012d506d7d060ea61c86b617a90eb167'; 
+var authToken = '5599d2787404e6a6d4467d2a5f7d281a'; 
+var client = require('twilio')(accountSid, authToken); 
 
 // A database which stores users' phone number and prescription information.
 var db = {}; 
@@ -96,7 +99,7 @@ var addToDatabase = function(phoneNumber, Person) {
 // send the user the welcome message and add them to the database
 var firstMessage = function(From, req, res) {
     var welcomeTwiml = new twilio.TwimlResponse();
-	welcomeTwiml.message("Hi! Welcome to Pill Buddy, your favorite pill" +
+	welcomeTwiml.message("Hi! Welcome to Pill Buddy, your favorite pill " +
 	"reminder system. What's your name?");
 	res.send(welcomeTwiml.toString());
 
@@ -106,7 +109,7 @@ var firstMessage = function(From, req, res) {
 }
 
 // an array of the days of the week
-var days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'
+var days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday',
 			'Saturday', 'Sunday'];
 
 // account for users pluralizing days of the week
@@ -117,14 +120,13 @@ var pluralDaysOfWeek = function(dayNumber, index, input) {
 
 // move past all white space
 var skipWhiteSpace = function(input, index) {
-	while (input.charAt(index) !== ' ' && input.charAt(index) !== '\t') &&
-		input.charAt(index) !== '\n') index ++;
+	while (input.charAt(index) !== '\t' && input.charAt(index) !== ' ' && input.charAt(index) !== '\n') index ++;
 	return index;
 };
 
 // parse the input given by the user and return an array of the command
 var parseInput = function(input) {
-	var result = [0, 0, 0, 0, 0];
+	var result = [];
 	var index = 0;
 
 	input = input.toLowerCase();
@@ -192,7 +194,7 @@ var parseInput = function(input) {
 			index += 8;
 			break;
 		case ("ev") :
-			result[1] = "Everyday");
+			result[1] = "Everyday";
 			if (input.substring(index, index + 8) === "everyday") index += 8;
 			else index += 9;
 		default: break;
@@ -218,11 +220,11 @@ var parseInput = function(input) {
 		index++;
 	}
 
-	if (input.charAt(input.length - 2) === "a") result[4] = "am";
-	else result[4] = "pm";
+	if (input.charAt(input.length - 2) === "a") result[3] = "am";
+	else result[3] = "pm";
 
-	result[3] = input.substring(index, input.length - 2).trim();
-
+	result[4] = input.substring(index, input.length - 2).trim();
+	
 	return result;
 };
 
@@ -236,6 +238,7 @@ app.post('/', function(req, res) {
 	var twiml = new twilio.TwimlResponse();
 
 	var num = req.body.From;
+	console.log("TESTTESTTEST");
 
 	// if this is the first message, send the user the welcome message
 	if (!db[num]) {
@@ -245,86 +248,86 @@ app.post('/', function(req, res) {
 	// ask the user for their name, store it, and ask them for reminders
 	else if (!db[num].getName()) {
 		db[num].setName(req.body.Body);
-		twiml.message("Hi there " + db[num].getName() + "! With Pill Buddy, " +
-			"staying on top of your pill regimen is easy! To modify your " + 
-			"pill schedule, write \"add,\" \"remove,\" or \"change,\" " + 
+		twiml.message("Hi there " + db[num].getName() + "! To modify your " + 
+			"pill schedule, write \"add,\" or \"remove,\" " + 
 			"followed by a day of the week, a time of the day, the name of " +
-			"the medication and \"am\" or \"pm.\" You can also set schedules" +
-			" for \"weekdays\", \"weekends,\", or \"every day.\" For " + 
-			"example, to add a reminder for Mondays at 9:00 am, write " +
-			"\"Monday 9:00 AM.\" When would you like me to remind you?");
+			"your medication and \"am\" or \"pm.\" For example, you can write " +
+			"\"add Monday 9:00 am zyrtec.\" When would you like me to remind you?");
 		res.send(twiml.toString());
 	}
 
 	// handle additions, removals, and changes of prescriptions
-<<<<<<< HEAD
-	else {
-		var command = parseInput(reg.body.Body);
 
-		var action     = command[0];
-		var day        = command[1];
-		var time       = command[2];
-		var medication = command[3];
-		var ampm       = command[4];
-
-		var response = "Remind me on " + day + "s at " + time;
-=======
 	else {	
-		var command = parseInput(reg.body.Body);
-		var action     = command[0];
-		var day        = command[1];
-		var time       = command[2];
-		var medication = command[3];
-		var ampm       = command[4];
+		// var command = parseInput(req.body.Body);
+		// var action     = command[0];
+		// var day        = command[1];
+		// var time       = command[2];
+		// var ampm       = command[3];
+		// var medication = command[4];
+		console.log(time);
+		var splitText = req.body.Body.split(' ');
+		var action = splitText[0];
+		var day = splitText[1];
+		var time = splitText[2];
+		var ampm = splitText[3];
+		var medication = splitText[4];
+
+		var splitTime = time.split(':');
+		var hour = splitTime[0];
+		if (hour.length < 2) hour = "0" + hour;
+		var min = splitTime[1];
 
 		var response = "I'll remind you on " + day + "s at " + time;
->>>>>>> ericawu/master
 		twiml.message(response);
 		
 		var cronJobDates; 
 		var cronJobDay;
 		switch(day) {
-			case Monday: 
+			case "Monday": 
 				cronJobDay = 01;
 				break;
-			case Tuesday:
+			case "Tuesday":
 				cronJobDay = 02;
 				break;
-			case Wednesday:
+			case "Wednesday":
 				cronJobDay = 03;
 				break;
-			case Thursday: 
+			case "Thursday": 
 				cronJobDay = 04;
 				break;
-			case Friday:
+			case "Friday":
 				cronJobDay = 05;
 				break;
-			case Saturday:
+			case "Saturday":
 				cronJobDay = 06;
 				break;
-			case Sunday:
+			case "Sunday":
 				cronJobDay = 00;
 				break;
-			case Weekdays:
+			case "Weekdays":
 				cronJobDay = 1-5;
 				break;
+			default: break;
 		}
-
-		createCronJob('00 19 06 * * *');
-
+		var cronJobTime = "00 " + min + " " + hour + " * * *";
+		console.log(cronJobTime);
+		var textJob = new CronJob(cronJobTime, function() {
+			console.log("CRON IS RUNNING! Time is " + cronJobTime);
+			client.messages.create({
+    			body: "Reminder to take your " + medication + "!",
+    			to: num,
+    			from: "+18056284584"
+			}, function(err, message) {
+    			process.stdout.write("ERRORERRORERROR");
+				});
+			}, null, true, 'America/New_York');
 
 		return res.send(twiml.toString());
 	}
 	
 });
-var createCronJob = function(time) {
-new CronJob(time, function() {
-  			console.log('The CronJob is running');
-  			var textTwiml = new twilio.TwimlResponse();
-  			textTwiml.message("IT'S WORKING!");
-  			request.send(textTwiml.toString());
-  		}, null, true, 'America/New_York');
-}
+
 
 
 
